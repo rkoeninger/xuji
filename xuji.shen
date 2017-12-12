@@ -1,10 +1,35 @@
 
+(defcc <conditional-operator>
+  = := =;
+  < := <;
+  > := >;
+  <= := <=;
+  >= := >=;
+  <> := <>;)
+
+(defcc <binary-operator>
+  + := +;
+  - := -;
+  * := *;
+  / := /;
+  <conditional-operator> := <conditional-operator>;)
+
+(defcc <expression>
+  ( <expression> ) as Name := [as <expression> Name];
+  Name1 <binary-operator> Name2 := [<binary-operator> Name1 Name2];
+  Name := Name;)
+
 (defcc <conditional>
-  Cond := Cond;)
+  ( <conditional1> ) and ( <conditional2> ) := [and <conditional1> <conditional2>];
+  ( <conditional1> ) or  ( <conditional2> ) := [or  <conditional1> <conditional2>];
+  Name1 <conditional-operator> Name2 := [<conditional-operator> Name1 Name2];)
+
+(defcc <conditional1> <conditional> := <conditional>;)
+(defcc <conditional2> <conditional> := <conditional>;)
 
 (defcc <selections>
-  Name , <selections> := [Name | <selections>];
-  Name := [Name];)
+  <expression> , <selections> := [<expression> | <selections>];
+  <expression> := [<expression>];)
 
 (defcc <joins>
   join Name on <conditional> <joins> := [(@p Name <conditional>) | <joins>];
@@ -18,8 +43,8 @@
   Name := Name;)
 
 (defcc <assignments>
-  Column = Expr , <assignments> := [(@p Column Expr) | <assignments>];
-  Column = Expr := [(@p Column Expr)];)
+  Column = <expression> , <assignments> := [(@p Column <expression>) | <assignments>];
+  Column = <expression> := [(@p Column <expression>)];)
 
 (defcc <select>
 
@@ -54,6 +79,33 @@
       [assignments <assignments>]
       [conditional <conditional>]];)
 
+(defcc <insert>
+
+  insert into <target> ( <columns> )
+  values ( <values> )
+
+  := [insert
+      [target <target>]
+      [columns <columns>]
+      [values <values>]];)
+
+(defcc <delete>
+
+  delete from <target>
+  where <conditional>
+
+  := [delete
+      [target <target>]
+      [conditional <conditional>]];)
+
 (defcc <sql>
   <select> := <select>;
-  <update> := <update>;)
+  <update> := <update>;
+  <insert> := <insert>;
+  <delete> := <delete>;)
+
+(define parse-sql
+  Ast -> (compile (function <sql>) Ast))
+
+(define parse-sql-from-string
+  String -> (parse-sql (read-from-string String)))

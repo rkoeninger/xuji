@@ -1,0 +1,9 @@
+notifications:
+  email: false
+language: generic
+install:
+  - wget https://github.com/Shen-Language/shen-cl/releases/download/v2.2.0/shen-cl-v2.2.0-linux-prebuilt.tar.gz
+  - tar xvf shen-cl-v2.2.0-linux-prebuilt.tar.gz
+  - cp shen-cl-v2.2.0-linux-prebuilt/shen ./shen
+script:
+  - shen -e "(do (load \"xuji.shen\") (load \"tests.shen\") (xuji-tests))"
