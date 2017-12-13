@@ -1,4 +1,8 @@
 
+\\ These are just curlies for now until the lexer can be replaced
+(defcc <lparen> { := skip;)
+(defcc <rparen> } := skip;)
+
 (defcc <conditional-operator>
   = := =;
   < := <;
@@ -15,13 +19,13 @@
   <conditional-operator> := <conditional-operator>;)
 
 (defcc <expression>
-  ( <expression> ) as Name := [as <expression> Name];
+  <lparen> <expression> <rparen> as Name := [as <expression> Name];
   Name1 <binary-operator> Name2 := [<binary-operator> Name1 Name2];
   Name := Name;)
 
 (defcc <conditional>
-  ( <conditional1> ) and ( <conditional2> ) := [and <conditional1> <conditional2>];
-  ( <conditional1> ) or  ( <conditional2> ) := [or  <conditional1> <conditional2>];
+  <lparen> <conditional1> <rparen> and <lparen> <conditional2> <rparen> := [and <conditional1> <conditional2>];
+  <lparen> <conditional1> <rparen> or  <lparen> <conditional2> <rparen> := [or  <conditional1> <conditional2>];
   Name1 <conditional-operator> Name2 := [<conditional-operator> Name1 Name2];)
 
 (defcc <conditional1> <conditional> := <conditional>;)
@@ -45,6 +49,21 @@
 (defcc <assignments>
   Column = <expression> , <assignments> := [(@p Column <expression>) | <assignments>];
   Column = <expression> := [(@p Column <expression>)];)
+
+(defcc <columns>
+  <rparen> := skip;
+  Name , <columns> := [Name | <columns>];
+  Name := [Name];)
+
+(defcc <values>
+  <rparen> := skip;
+  <expression> , <values> := [<expression> | <values>];
+  <expression> := [<expression>])
+
+(defcc <column-declarations>
+  <rparen> := skip;
+  Name Type , <column-declarations> := [(@p Name Type) | <column-declarations>];
+  Name Type := [(@p Name Type)];)
 
 (defcc <select>
 
@@ -81,8 +100,8 @@
 
 (defcc <insert>
 
-  insert into <target> ( <columns> )
-  values ( <values> )
+  insert into <target> <lparen> <columns> <rparen>
+  values <lparen> <values> <rparen>
 
   := [insert
       [target <target>]
@@ -98,11 +117,20 @@
       [target <target>]
       [conditional <conditional>]];)
 
+(defcc <create-table>
+
+  create table Name <lparen> <column-declarations> <rparen>
+
+  := [create
+      [name Name]
+      [columns <column-declarations>]];)
+
 (defcc <sql>
   <select> := <select>;
   <update> := <update>;
   <insert> := <insert>;
-  <delete> := <delete>;)
+  <delete> := <delete>;
+  <create-table> := <create-table>;)
 
 (define parse-sql
   Ast -> (compile (function <sql>) Ast))
